@@ -3,7 +3,6 @@ package endpoints
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"github.com/go-kit/kit/endpoint"
 	kitlog "github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -32,14 +31,9 @@ func makeCreateTaskEndpoint(service *services.TasksService) endpoint.Endpoint {
 }
 
 func decodeCreateRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	authHeader := r.Header.Get("Authorization")
-	if authHeader == "" {
-		return nil, errors.New("unauthorized")
-	}
-	authToken := GetTokenFromAuthorization(authHeader)
-	userClaim, err := DecodeUserFromToken(authToken)
+	userClaim, err := GetUserClaimFromRequest(r)
 	if err != nil {
-		return nil, errors.New("unauthorized")
+		return nil, err
 	}
 
 	var request createTaskRequest
