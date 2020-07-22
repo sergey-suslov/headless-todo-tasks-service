@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"headless-todo-tasks-service/internal/entities"
@@ -19,7 +20,7 @@ func NewTasksRepositoryMongo(db *mongo.Database) repositories.TasksRepository {
 }
 
 func (r *TasksRepositoryMongo) Create(ctx context.Context, task entities.Task) (*entities.Task, error) {
-	result, err := r.db.Collection(TasksCollection).InsertOne(ctx, task)
+	result, err := r.db.Collection(TasksCollection).InsertOne(ctx, bson.M{"name": task.Name, "userId": task.UserId, "description": task.Description, "created": task.Created})
 	if err != nil {
 		return nil, err
 	}

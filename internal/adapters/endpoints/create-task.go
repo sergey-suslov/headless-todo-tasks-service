@@ -22,7 +22,7 @@ type createTaskRequest struct {
 func makeCreateTaskEndpoint(service *services.TasksService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createTaskRequest)
-		task, err := service.Create(ctx, req.Name, req.Description)
+		task, err := service.Create(ctx, req.Name, req.Description, req.UserClaim.ID)
 		if err != nil {
 			return nil, err
 		}

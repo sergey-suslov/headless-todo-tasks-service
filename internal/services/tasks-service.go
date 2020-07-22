@@ -14,6 +14,6 @@ func NewTasksService(tasksRepository repositories.TasksRepository) *TasksService
 	return &TasksService{tasksRepository}
 }
 
-func (service *TasksService) Create(ctx context.Context, name, description string) (*entities.Task, error) {
-	return service.tasksRepository.Create(ctx, entities.NewTask(name, description))
+func (service *TasksService) Create(ctx context.Context, name, description string, userId string) (*entities.Task, error) {
+	return service.tasksRepository.Create(ctx, entities.NewTask(name, description, userId))
 }
