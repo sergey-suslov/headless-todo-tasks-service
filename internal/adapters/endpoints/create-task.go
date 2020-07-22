@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/go-kit/kit/endpoint"
+	kitlog "github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"go.uber.org/dig"
+	"headless-todo-tasks-service/internal/adapters/middlewares"
 	"headless-todo-tasks-service/internal/services"
 	"log"
 	"net/http"
@@ -48,8 +50,20 @@ func CreateTaskHandler(c *dig.Container) http.Handler {
 		log.Fatal(err)
 	}
 
+	var logger kitlog.Logger
+	err = c.Invoke(func(log kitlog.Logger) {
+		logger = log
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	taskEndpoint := makeCreateTaskEndpoint(service)
+	loggerMiddleware := middlewares.LoggerMiddleware(kitlog.With(logger, "method", "create-task"))
+	taskEndpoint = loggerMiddleware(taskEndpoint)
+
 	return httptransport.NewServer(
-		makeCreateTaskEndpoint(service),
+		taskEndpoint,
 		decodeCreateRequest,
 		encodeCreateRequest,
 	)
