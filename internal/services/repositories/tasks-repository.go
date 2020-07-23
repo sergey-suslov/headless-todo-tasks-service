@@ -6,5 +6,5 @@ import (
 )
 
 type TasksRepository interface {
-	Create(context.Context, entities.Task) (*entities.Task, error)
+	Create(context.Context, string, string, string) (*entities.Task, error)
 }

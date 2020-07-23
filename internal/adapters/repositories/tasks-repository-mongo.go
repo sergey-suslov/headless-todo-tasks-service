@@ -19,7 +19,8 @@ func NewTasksRepositoryMongo(db *mongo.Database) repositories.TasksRepository {
 	return &TasksRepositoryMongo{db}
 }
 
-func (r *TasksRepositoryMongo) Create(ctx context.Context, task entities.Task) (*entities.Task, error) {
+func (r *TasksRepositoryMongo) Create(ctx context.Context, name, description, userId string) (*entities.Task, error) {
+	task := entities.NewTask(name, description, userId)
 	result, err := r.db.Collection(TasksCollection).InsertOne(ctx, bson.M{"name": task.Name, "userId": task.UserId, "description": task.Description, "created": task.Created})
 	if err != nil {
 		return nil, err
