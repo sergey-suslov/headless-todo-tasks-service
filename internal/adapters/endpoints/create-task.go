@@ -19,33 +19,19 @@ type createTaskRequest struct {
 	Description string `json:"description"`
 }
 
+func (c *createTaskRequest) SetUserClaim(claim UserClaim) {
+	c.UserClaim = claim
+}
+
 func makeCreateTaskEndpoint(service *services.TasksService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(createTaskRequest)
+		req := request.(*createTaskRequest)
 		task, err := service.Create(ctx, req.Name, req.Description, req.UserClaim.ID)
 		if err != nil {
 			return nil, err
 		}
 		return task, nil
 	}
-}
-
-func decodeCreateRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	userClaim, err := GetUserClaimFromRequest(r)
-	if err != nil {
-		return nil, err
-	}
-
-	var request createTaskRequest
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		return nil, err
-	}
-	request.UserClaim = *userClaim
-	return request, nil
-}
-
-func encodeCreateRequest(_ context.Context, w http.ResponseWriter, response interface{}) error {
-	return json.NewEncoder(w).Encode(response)
 }
 
 func CreateTaskHandler(c *dig.Container) http.Handler {
@@ -71,7 +57,13 @@ func CreateTaskHandler(c *dig.Container) http.Handler {
 
 	return httptransport.NewServer(
 		taskEndpoint,
-		decodeCreateRequest,
-		encodeCreateRequest,
+		DefaultRequestDecoder(func(r *http.Request) (UserClaimable, error) {
+			var request createTaskRequest
+			if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+				return nil, err
+			}
+			return &request, nil
+		}),
+		DefaultRequestEncoder,
 	)
 }

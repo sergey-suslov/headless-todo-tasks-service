@@ -14,6 +14,14 @@ type MockedTasksRepository struct {
 	mock.Mock
 }
 
+func (m *MockedTasksRepository) FindByUserId(ctx context.Context, userId string, l int64, o int64) ([]entities.Task, error) {
+	args := m.Called(ctx, userId, l, o)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]entities.Task), args.Error(1)
+}
+
 func (m *MockedTasksRepository) Create(ctx context.Context, name, description, userId string) (*entities.Task, error) {
 	args := m.Called(ctx, name, description, userId)
 	if args.Get(0) == nil {

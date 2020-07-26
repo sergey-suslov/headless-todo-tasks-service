@@ -2,7 +2,7 @@ package endpoints
 
 import (
 	"errors"
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
 	"net/http"
 	"strings"
 )
