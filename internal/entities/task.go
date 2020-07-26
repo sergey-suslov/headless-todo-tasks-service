@@ -6,11 +6,11 @@ import (
 )
 
 type Task struct {
-	ID          primitive.ObjectID
-	Name        string
-	Description string
-	UserId      string
-	Created     primitive.Timestamp
+	ID          primitive.ObjectID  `json:"_id" bson:"_id"`
+	Name        string              `json:"name"`
+	Description string              `json:"description"`
+	UserId      string              `json:"userId"`
+	Created     primitive.Timestamp `json:"created"`
 }
 
 func NewTask(name, description, userId string) Task {

@@ -27,3 +27,10 @@ func (service *TasksService) Create(ctx context.Context, name, description, user
 	}
 	return service.tasksRepository.Create(ctx, name, description, userId)
 }
+
+func (service *TasksService) GetByUserId(ctx context.Context, userId string, limit, offset int64) ([]entities.Task, error) {
+	if userId == "" {
+		return nil, errors.New("userId must be present")
+	}
+	return service.tasksRepository.FindByUserId(ctx, userId, limit, offset)
+}

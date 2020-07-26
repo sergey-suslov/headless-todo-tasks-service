@@ -14,5 +14,6 @@ func main() {
 	c := Init(client)
 
 	http.Handle("/create-task", endpoints.CreateTaskHandler(c))
+	http.Handle("/get-tasks", endpoints.GetTasksHandler(c))
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

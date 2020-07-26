@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"headless-todo-tasks-service/internal/adapters/repositories"
 	"log"
 	"time"
 )
@@ -15,6 +17,20 @@ func ConnectMongo() (*mongo.Client, func()) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	database := client.Database("tasks")
+
+	userIdIndex := mongo.IndexModel{
+		Keys: bson.M{
+			"userId": 1,
+		},
+		Options: nil,
+	}
+	_, err = database.Collection(repositories.TasksCollection).Indexes().CreateOne(ctx, userIdIndex)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return client, func() {
 		if err = client.Disconnect(ctx); err != nil {
 			panic(err)
