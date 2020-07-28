@@ -7,15 +7,20 @@ import (
 	"headless-todo-tasks-service/internal/services/repositories"
 )
 
-type TasksService struct {
+type TasksService interface {
+	Create(ctx context.Context, name, description, userId string) (*entities.Task, error)
+	GetByUserId(ctx context.Context, userId string, limit, offset int64) ([]entities.Task, error)
+}
+
+type tasksService struct {
 	tasksRepository repositories.TasksRepository
 }
 
-func NewTasksService(tasksRepository repositories.TasksRepository) *TasksService {
-	return &TasksService{tasksRepository}
+func NewTasksService(tasksRepository repositories.TasksRepository) TasksService {
+	return &tasksService{tasksRepository}
 }
 
-func (service *TasksService) Create(ctx context.Context, name, description, userId string) (*entities.Task, error) {
+func (service *tasksService) Create(ctx context.Context, name, description, userId string) (*entities.Task, error) {
 	if name == "" {
 		return nil, errors.New("name must be present")
 	}
@@ -28,7 +33,7 @@ func (service *TasksService) Create(ctx context.Context, name, description, user
 	return service.tasksRepository.Create(ctx, name, description, userId)
 }
 
-func (service *TasksService) GetByUserId(ctx context.Context, userId string, limit, offset int64) ([]entities.Task, error) {
+func (service *tasksService) GetByUserId(ctx context.Context, userId string, limit, offset int64) ([]entities.Task, error) {
 	if userId == "" {
 		return nil, errors.New("userId must be present")
 	}

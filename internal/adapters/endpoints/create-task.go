@@ -23,7 +23,7 @@ func (c *createTaskRequest) SetUserClaim(claim UserClaim) {
 	c.UserClaim = claim
 }
 
-func makeCreateTaskEndpoint(service *services.TasksService) endpoint.Endpoint {
+func makeCreateTaskEndpoint(service services.TasksService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*createTaskRequest)
 		task, err := service.Create(ctx, req.Name, req.Description, req.UserClaim.ID)
@@ -35,8 +35,8 @@ func makeCreateTaskEndpoint(service *services.TasksService) endpoint.Endpoint {
 }
 
 func CreateTaskHandler(c *dig.Container) http.Handler {
-	var service *services.TasksService
-	err := c.Invoke(func(s *services.TasksService) {
+	var service services.TasksService
+	err := c.Invoke(func(s services.TasksService) {
 		service = s
 	})
 	if err != nil {
@@ -51,9 +51,8 @@ func CreateTaskHandler(c *dig.Container) http.Handler {
 		log.Fatal(err)
 	}
 
+	service = &middlewares.LoggerMiddleware{Logger: kitlog.With(logger), Next: service}
 	taskEndpoint := makeCreateTaskEndpoint(service)
-	loggerMiddleware := middlewares.LoggerMiddleware(kitlog.With(logger, "method", "create-task"))
-	taskEndpoint = loggerMiddleware(taskEndpoint)
 
 	return httptransport.NewServer(
 		taskEndpoint,

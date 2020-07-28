@@ -2,22 +2,39 @@ package middlewares
 
 import (
 	"context"
-	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
+	"headless-todo-tasks-service/internal/entities"
+	"headless-todo-tasks-service/internal/services"
+	"time"
 )
 
-func LoggerMiddleware(logger log.Logger) endpoint.Middleware {
-	return func(next endpoint.Endpoint) endpoint.Endpoint {
-		return func(ctx context.Context, request interface{}) (interface{}, error) {
-			_ = logger.Log("msg", "calling endpoint with request")
-			defer func() {
-				_ = logger.Log("msg", "called endpoint")
-				err := recover()
-				if err != nil {
-					_ = logger.Log("unhandled error", err)
-				}
-			}()
-			return next(ctx, request)
-		}
-	}
+type LoggerMiddleware struct {
+	Logger log.Logger
+	Next   services.TasksService
+}
+
+func (l *LoggerMiddleware) Create(ctx context.Context, name, description, userId string) (output *entities.Task, err error) {
+	defer func(begin time.Time) {
+		_ = l.Logger.Log(
+			"method", "Create",
+			"name", name,
+			"description", description,
+			"userId", userId,
+			"err", err,
+			"took", time.Since(begin),
+		)
+	}(time.Now())
+	return l.Next.Create(ctx, name, description, userId)
+}
+
+func (l *LoggerMiddleware) GetByUserId(ctx context.Context, userId string, limit, offset int64) (output []entities.Task, err error) {
+	defer func(begin time.Time) {
+		_ = l.Logger.Log(
+			"method", "GetByUserId",
+			"userId", userId,
+			"err", err,
+			"took", time.Since(begin),
+		)
+	}(time.Now())
+	return l.Next.GetByUserId(ctx, userId, limit, offset)
 }
