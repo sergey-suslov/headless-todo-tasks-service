@@ -9,11 +9,31 @@ import (
 	"time"
 )
 
+type PrometheusMetrics struct {
+	RequestCount   metrics.Counter
+	RequestLatency metrics.Histogram
+	CountResult    metrics.Histogram
+}
+
+func NewPrometheusMetrics(requestCount metrics.Counter, requestLatency metrics.Histogram, countResult metrics.Histogram) *PrometheusMetrics {
+	return &PrometheusMetrics{RequestCount: requestCount, RequestLatency: requestLatency, CountResult: countResult}
+}
+
 type InstrumentingMiddleware struct {
 	RequestCount   metrics.Counter
 	RequestLatency metrics.Histogram
 	CountResult    metrics.Histogram
 	Next           services.TasksService
+}
+
+func (mw *InstrumentingMiddleware) Update(ctx context.Context, userId, taskId, name, description string) (err error) {
+	defer func(begin time.Time) {
+		lvs := []string{"method", "Update", "error", fmt.Sprint(err != nil)}
+		mw.RequestCount.With(lvs...).Add(1)
+		mw.RequestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mw.Next.Update(ctx, userId, taskId, name, description)
 }
 
 func (mw *InstrumentingMiddleware) Create(ctx context.Context, name, description, userId string) (output *entities.Task, err error) {

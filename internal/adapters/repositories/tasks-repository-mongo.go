@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -47,4 +48,32 @@ func (r *TasksRepositoryMongo) FindByUserId(ctx context.Context, userId string, 
 	}
 
 	return tasks, nil
+}
+
+func (r *TasksRepositoryMongo) Update(ctx context.Context, taskId string, name string, description string) error {
+	id, err := primitive.ObjectIDFromHex(taskId)
+	if err != nil {
+		return errors.New("wrong id format")
+	}
+	one, err := r.db.Collection(TasksCollection).UpdateOne(ctx, bson.M{"_id": id}, bson.D{{"$set", bson.D{{"name", name}, {"description", description}}}})
+	if err != nil {
+		return err
+	}
+	if one.ModifiedCount == 0 {
+		return errors.New("no records updated")
+	}
+	return nil
+}
+
+func (r *TasksRepositoryMongo) FindById(ctx context.Context, taskId string) (*entities.Task, error) {
+	id, err := primitive.ObjectIDFromHex(taskId)
+	if err != nil {
+		return nil, errors.New("wrong id format")
+	}
+	var task entities.Task
+	err = r.db.Collection(TasksCollection).FindOne(ctx, bson.M{"_id": id}).Decode(&task)
+	if err != nil {
+		return nil, err
+	}
+	return &task, nil
 }

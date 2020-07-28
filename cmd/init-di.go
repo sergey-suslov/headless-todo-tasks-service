@@ -2,8 +2,11 @@ package main
 
 import (
 	kitlog "github.com/go-kit/kit/log"
+	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
+	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/dig"
+	"headless-todo-tasks-service/internal/adapters/middlewares"
 	"headless-todo-tasks-service/internal/adapters/repositories"
 	"headless-todo-tasks-service/internal/services"
 	"log"
@@ -31,6 +34,29 @@ func Init(client *mongo.Client) *dig.Container {
 
 	err = c.Provide(repositories.NewTasksRepositoryMongo)
 	handleError(err)
+
+	err = c.Provide(func() *middlewares.PrometheusMetrics {
+		fieldKeys := []string{"method", "error"}
+		requestCount := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+			Namespace: "my_group",
+			Subsystem: "string_service",
+			Name:      "request_count",
+			Help:      "Number of requests received.",
+		}, fieldKeys)
+		requestLatency := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+			Namespace: "my_group",
+			Subsystem: "string_service",
+			Name:      "request_latency_microseconds",
+			Help:      "Total duration of requests in microseconds.",
+		}, fieldKeys)
+		countResult := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+			Namespace: "my_group",
+			Subsystem: "string_service",
+			Name:      "count_result",
+			Help:      "The result of each count method.",
+		}, []string{}) // no fields here
+		return middlewares.NewPrometheusMetrics(requestCount, requestLatency, countResult)
+	})
 
 	err = c.Provide(services.NewTasksService)
 	handleError(err)

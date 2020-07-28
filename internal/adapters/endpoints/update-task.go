@@ -13,28 +13,29 @@ import (
 	"net/http"
 )
 
-type getTasksRequest struct {
+type updateTaskRequest struct {
 	UserClaim
-	Limit  int64 `json:"limit"`
-	Offset int64 `json:"offset"`
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Offset string `json:"description"`
 }
 
-func (g *getTasksRequest) SetUserClaim(claim UserClaim) {
+func (g *updateTaskRequest) SetUserClaim(claim UserClaim) {
 	g.UserClaim = claim
 }
 
-func makeGetTasksEndpoint(service services.TasksService) endpoint.Endpoint {
+func makeUpdateTaskEndpoint(service services.TasksService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(*getTasksRequest)
-		task, err := service.GetByUserId(ctx, req.ID, req.Limit, req.Offset)
+		req := request.(*updateTaskRequest)
+		err := service.Update(ctx, req.UserClaim.ID, req.ID, req.Name, req.Name)
 		if err != nil {
 			return nil, err
 		}
-		return task, nil
+		return "", nil
 	}
 }
 
-func GetTasksHandler(c *dig.Container) http.Handler {
+func UpdateTaskHandler(c *dig.Container) http.Handler {
 	var service services.TasksService
 	err := c.Invoke(func(s services.TasksService) {
 		service = s
@@ -60,14 +61,15 @@ func GetTasksHandler(c *dig.Container) http.Handler {
 	}
 
 	service = &middlewares.LoggerMiddleware{Logger: kitlog.With(logger), Next: service}
+
 	service = &middlewares.InstrumentingMiddleware{RequestCount: metrics.RequestCount, RequestLatency: metrics.RequestLatency, CountResult: metrics.CountResult, Next: service}
-	taskEndpoint := makeGetTasksEndpoint(service)
+	taskEndpoint := makeUpdateTaskEndpoint(service)
 
 	return httptransport.NewServer(
 		taskEndpoint,
 		DefaultRequestDecoder(func(r *http.Request) (
 			UserClaimable, error) {
-			var request getTasksRequest
+			var request updateTaskRequest
 			if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 				return nil, err
 			}
