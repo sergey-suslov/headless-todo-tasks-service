@@ -12,14 +12,15 @@ func main() {
 
 	client, closeConnection := ConnectMongo()
 	nc, sc, closeNats := ConnectNats()
+
+	c := Init(client, nc, sc)
+
 	defer func() {
 		closeConnection()
 		closeNats()
 	}()
-
-	c := Init(client, nc, sc)
-
 	endpoints.CreateAddFileHandler(c)
+	_ = endpoints.CreateGetTaskByIdHandler(c)
 	http.Handle("/create-task", endpoints.CreateTaskHandler(c))
 	http.Handle("/get-tasks", endpoints.GetTasksHandler(c))
 	http.Handle("/update", endpoints.UpdateTaskHandler(c))

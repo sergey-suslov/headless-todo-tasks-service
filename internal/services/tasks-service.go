@@ -12,6 +12,7 @@ type TasksService interface {
 	GetByUserId(ctx context.Context, userId string, limit, offset int64) ([]entities.Task, error)
 	Update(ctx context.Context, userId, taskId, name, description string) error
 	AddFile(ctx context.Context, taskId, fileId, fileName string) error
+	GetById(ctx context.Context, taskId string) (*entities.Task, error)
 }
 
 type tasksService struct {
@@ -66,4 +67,11 @@ func (service *tasksService) AddFile(ctx context.Context, taskId, fileId, fileNa
 	}
 
 	return service.tasksRepository.AddFile(ctx, taskId, fileId, fileName)
+}
+
+func (service *tasksService) GetById(ctx context.Context, taskId string) (*entities.Task, error) {
+	if taskId == "" {
+		return nil, errors.New("taskId must be present")
+	}
+	return service.tasksRepository.FindById(ctx, taskId)
 }

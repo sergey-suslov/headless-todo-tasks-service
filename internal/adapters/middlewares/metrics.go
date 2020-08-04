@@ -26,6 +26,16 @@ type InstrumentingMiddleware struct {
 	Next           services.TasksService
 }
 
+func (mw *InstrumentingMiddleware) GetById(ctx context.Context, taskId string) (task *entities.Task, err error) {
+	defer func(begin time.Time) {
+		lvs := []string{"method", "GetById", "error", fmt.Sprint(err != nil)}
+		mw.RequestCount.With(lvs...).Add(1)
+		mw.RequestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mw.Next.GetById(ctx, taskId)
+}
+
 func (mw *InstrumentingMiddleware) AddFile(ctx context.Context, taskId, fileId, fileName string) (err error) {
 	defer func(begin time.Time) {
 		lvs := []string{"method", "AddFile", "error", fmt.Sprint(err != nil)}
