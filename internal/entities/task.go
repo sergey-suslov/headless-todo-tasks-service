@@ -10,6 +10,7 @@ type Task struct {
 	Name        string              `json:"name"`
 	Description string              `json:"description"`
 	UserId      string              `json:"userId"`
+	Files       []File              `json:"files"`
 	Created     primitive.Timestamp `json:"created"`
 }
 

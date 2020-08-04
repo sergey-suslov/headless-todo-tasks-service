@@ -72,8 +72,39 @@ func (r *TasksRepositoryMongo) FindById(ctx context.Context, taskId string) (*en
 	}
 	var task entities.Task
 	err = r.db.Collection(TasksCollection).FindOne(ctx, bson.M{"_id": id}).Decode(&task)
+	if err == mongo.ErrNoDocuments {
+		return nil, repositories.NoTaskWithIdError
+	}
 	if err != nil {
 		return nil, err
 	}
 	return &task, nil
+}
+
+func (r *TasksRepositoryMongo) AddFile(ctx context.Context, userId, taskId, fileId, fileName string) error {
+	task, err := r.FindById(ctx, taskId)
+	if err != nil {
+		return err
+	}
+	if task.UserId != userId {
+		return repositories.NoTaskWithIdError
+	}
+
+	fileIdAsObjectId, err := primitive.ObjectIDFromHex(fileId)
+	task.Files = append(task.Files, entities.File{
+		ID:   fileIdAsObjectId,
+		Name: fileName,
+	})
+	return r.Save(ctx, *task)
+}
+
+func (r *TasksRepositoryMongo) Save(ctx context.Context, task entities.Task) error {
+	one, err := r.db.Collection(TasksCollection).UpdateOne(ctx, bson.M{"_id": task.ID}, bson.D{{"$set", task}})
+	if err != nil {
+		return err
+	}
+	if one.ModifiedCount == 0 {
+		return errors.New("no records updated")
+	}
+	return nil
 }
