@@ -13,18 +13,18 @@ type LoggerMiddleware struct {
 	Next   services.TasksService
 }
 
-func (l *LoggerMiddleware) AddFile(ctx context.Context, userId, taskId, fileId, fileName string) (err error) {
+func (l *LoggerMiddleware) AddFile(ctx context.Context, taskId, fileId, fileName string) (err error) {
 	defer func(begin time.Time) {
 		_ = l.Logger.Log(
 			"method", "AddFile",
-			"userId", userId,
+			"taskId", taskId,
 			"fileId", fileId,
 			"fileName", fileName,
 			"err", err,
 			"took", time.Since(begin),
 		)
 	}(time.Now())
-	return l.Next.Update(ctx, userId, taskId, fileId, fileName)
+	return l.Next.AddFile(ctx, taskId, fileId, fileName)
 }
 
 func (l *LoggerMiddleware) Update(ctx context.Context, userId, taskId, name, description string) (err error) {

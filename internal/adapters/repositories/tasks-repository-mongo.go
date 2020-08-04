@@ -81,13 +81,10 @@ func (r *TasksRepositoryMongo) FindById(ctx context.Context, taskId string) (*en
 	return &task, nil
 }
 
-func (r *TasksRepositoryMongo) AddFile(ctx context.Context, userId, taskId, fileId, fileName string) error {
+func (r *TasksRepositoryMongo) AddFile(ctx context.Context, taskId, fileId, fileName string) error {
 	task, err := r.FindById(ctx, taskId)
 	if err != nil {
 		return err
-	}
-	if task.UserId != userId {
-		return repositories.NoTaskWithIdError
 	}
 
 	fileIdAsObjectId, err := primitive.ObjectIDFromHex(fileId)

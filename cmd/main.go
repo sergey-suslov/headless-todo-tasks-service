@@ -19,6 +19,7 @@ func main() {
 
 	c := Init(client, nc, sc)
 
+	endpoints.CreateAddFileHandler(c)
 	http.Handle("/create-task", endpoints.CreateTaskHandler(c))
 	http.Handle("/get-tasks", endpoints.GetTasksHandler(c))
 	http.Handle("/update", endpoints.UpdateTaskHandler(c))

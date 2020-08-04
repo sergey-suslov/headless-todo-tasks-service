@@ -11,7 +11,7 @@ type TasksService interface {
 	Create(ctx context.Context, name, description, userId string) (*entities.Task, error)
 	GetByUserId(ctx context.Context, userId string, limit, offset int64) ([]entities.Task, error)
 	Update(ctx context.Context, userId, taskId, name, description string) error
-	AddFile(ctx context.Context, userId, taskId, fileId, fileName string) error
+	AddFile(ctx context.Context, taskId, fileId, fileName string) error
 }
 
 type tasksService struct {
@@ -54,10 +54,7 @@ func (service *tasksService) Update(ctx context.Context, userId, taskId, name, d
 	return service.tasksRepository.Update(ctx, taskId, name, description)
 }
 
-func (service *tasksService) AddFile(ctx context.Context, userId, taskId, fileId, fileName string) error {
-	if userId == "" {
-		return errors.New("userId must be present")
-	}
+func (service *tasksService) AddFile(ctx context.Context, taskId, fileId, fileName string) error {
 	if taskId == "" {
 		return errors.New("taskId must be present")
 	}
@@ -68,5 +65,5 @@ func (service *tasksService) AddFile(ctx context.Context, userId, taskId, fileId
 		return errors.New("fileName must be present")
 	}
 
-	return service.tasksRepository.AddFile(ctx, userId, taskId, fileId, fileName)
+	return service.tasksRepository.AddFile(ctx, taskId, fileId, fileName)
 }
