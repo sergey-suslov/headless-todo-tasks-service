@@ -3,6 +3,8 @@ package main
 import (
 	kitlog "github.com/go-kit/kit/log"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
+	"github.com/nats-io/nats.go"
+	"github.com/nats-io/stan.go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/dig"
@@ -19,7 +21,7 @@ func handleError(err error) {
 	}
 }
 
-func Init(client *mongo.Client) *dig.Container {
+func Init(client *mongo.Client, nc *nats.Conn, sc stan.Conn) *dig.Container {
 	c := dig.New()
 
 	err := c.Provide(func() *mongo.Client {
@@ -29,6 +31,16 @@ func Init(client *mongo.Client) *dig.Container {
 
 	err = c.Provide(func() *mongo.Database {
 		return client.Database("tasks")
+	})
+	handleError(err)
+
+	err = c.Provide(func() *nats.Conn {
+		return nc
+	})
+	handleError(err)
+
+	err = c.Provide(func() stan.Conn {
+		return sc
 	})
 	handleError(err)
 

@@ -8,12 +8,18 @@ import (
 )
 
 func main() {
+	initConfig()
 
 	client, closeConnection := ConnectMongo()
-	defer func() { closeConnection() }()
+	nc, sc, closeNats := ConnectNats()
+	defer func() {
+		closeConnection()
+		closeNats()
+	}()
 
-	c := Init(client)
+	c := Init(client, nc, sc)
 
+	endpoints.CreateAddFileHandler(c)
 	http.Handle("/create-task", endpoints.CreateTaskHandler(c))
 	http.Handle("/get-tasks", endpoints.GetTasksHandler(c))
 	http.Handle("/update", endpoints.UpdateTaskHandler(c))

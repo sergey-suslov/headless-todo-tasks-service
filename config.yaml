@@ -1,0 +1,15 @@
+HTTP_PORT: 8080
+
+DB_NAME: tasks
+DB_PASSWORD: password
+DB_USER: user
+
+METRICS_NAMESPACE: headless_todo
+METRICS_SUBSYSTEM: files
+
+LOCAL_STORAGE_PATH: ../tmp
+
+NATS_CONNECTION_STRING: localhost:4222
+NATS_CLUSTER_ID: todo-cluster
+
+JWT_SECRET: xxx
