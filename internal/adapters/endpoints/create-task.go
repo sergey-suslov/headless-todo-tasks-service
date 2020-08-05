@@ -3,9 +3,11 @@ package endpoints
 import (
 	"context"
 	"encoding/json"
+	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
 	kitlog "github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
+	"github.com/sony/gobreaker"
 	"go.uber.org/dig"
 	"headless-todo-tasks-service/internal/adapters/middlewares"
 	"headless-todo-tasks-service/internal/services"
@@ -53,6 +55,15 @@ func CreateTaskHandler(c *dig.Container) http.Handler {
 
 	service = &middlewares.LoggerMiddleware{Logger: kitlog.With(logger), Next: service}
 	taskEndpoint := makeCreateTaskEndpoint(service)
+	breaker := circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+		Name:        "Create-Task",
+		MaxRequests: 100,
+		ReadyToTrip: func(counts gobreaker.Counts) bool {
+			failureRatio := float64(counts.TotalFailures) / float64(counts.Requests)
+			return counts.Requests >= 3 && failureRatio >= 0.6
+		},
+	}))
+	taskEndpoint = breaker(taskEndpoint)
 
 	return httptransport.NewServer(
 		taskEndpoint,

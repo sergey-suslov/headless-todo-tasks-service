@@ -13,6 +13,18 @@ type LoggerMiddleware struct {
 	Next   services.TasksService
 }
 
+func (l *LoggerMiddleware) GetById(ctx context.Context, taskId string) (task *entities.Task, err error) {
+	defer func(begin time.Time) {
+		_ = l.Logger.Log(
+			"method", "GetById",
+			"taskId", taskId,
+			"err", err,
+			"took", time.Since(begin),
+		)
+	}(time.Now())
+	return l.Next.GetById(ctx, taskId)
+}
+
 func (l *LoggerMiddleware) AddFile(ctx context.Context, taskId, fileId, fileName string) (err error) {
 	defer func(begin time.Time) {
 		_ = l.Logger.Log(

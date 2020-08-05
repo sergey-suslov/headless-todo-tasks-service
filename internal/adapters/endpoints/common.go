@@ -6,6 +6,8 @@ import (
 	"net/http"
 )
 
+const CommonNatsGroup = "common.nats.group"
+
 func DefaultRequestEncoder(_ context.Context, w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Content-Type", "application/json")
 	return json.NewEncoder(w).Encode(response)
